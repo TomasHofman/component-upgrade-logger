@@ -9,3 +9,7 @@ create table component_upgrades (
     old_version varchar(255) not null,
     new_version varchar(255) not null
 );
+
+create index component_upgrades_project_idx on component_upgrades (project);
+
+create index component_upgrades_idx on component_upgrades (group_id, artifact_id, new_version);

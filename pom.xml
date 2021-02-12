@@ -48,10 +48,6 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-openshift</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-vertx</artifactId>
     </dependency>
     <dependency>
@@ -66,13 +62,24 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-context-propagation</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-health</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-kubernetes</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-container-image-docker</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
     </dependency>
 
-    <!-- Test dependencies -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-junit5</artifactId>
@@ -88,14 +95,7 @@
       <artifactId>assertj-core</artifactId>
       <scope>test</scope>
     </dependency>
-    <!-- Not working on Fedora, probably would not work on CI server either. -->
-    <!--<dependency>
-      <groupId>org.testcontainers</groupId>
-      <artifactId>postgresql</artifactId>
-      <scope>test</scope>
-    </dependency>-->
   </dependencies>
-
   <build>
     <plugins>
       <plugin>
@@ -158,7 +158,6 @@
         <quarkus.package.type>native</quarkus.package.type>
       </properties>
     </profile>
-
     <profile>
       <id>docker</id>
       <activation>
@@ -172,40 +171,10 @@
           <plugin>
             <groupId>io.fabric8</groupId>
             <artifactId>docker-maven-plugin</artifactId>
-            <configuration>
-              <images>
-                <image>
-                  <name>postgres:12.1</name>
-                  <alias>postgresql</alias>
-                  <run>
-                    <env>
-                      <POSTGRES_USER>quarkus_test</POSTGRES_USER>
-                      <POSTGRES_PASSWORD>quarkus_test</POSTGRES_PASSWORD>
-                      <POSTGRES_DB>quarkus_test</POSTGRES_DB>
-                    </env>
-                    <ports>
-                      <port>5432:5432</port>
-                    </ports>
-                    <wait>
-                      <tcp>
-                        <mode>mapped</mode>
-                        <ports>
-                          <port>5432</port>
-                        </ports>
-                      </tcp>
-                      <time>10000</time>
-                    </wait>
-                  </run>
-                </image>
-              </images>
-              <!--Stops all postgres:12.1 images currently running, not just those we just started.
-                Useful to stop processes still running from a previously failed integration test run -->
-<!--              <allContainers>true</allContainers>-->
-            </configuration>
             <executions>
               <execution>
                 <id>docker-start</id>
-                <phase>test-compile</phase>
+                <phase>test</phase>
                 <goals>
                   <goal>stop</goal>
                   <goal>start</goal>
@@ -219,10 +188,48 @@
                 </goals>
               </execution>
             </executions>
+            <configuration>
+              <images>
+                <image>
+                  <name>postgres:12.1</name>
+                  <alias>postgresql</alias>
+                  <run>
+                    <env>
+                      <POSTGRES_USER>quarkus_test</POSTGRES_USER>
+                      <POSTGRES_PASSWORD>quarkus_test</POSTGRES_PASSWORD>
+                      <POSTGRES_DB>quarkus_test</POSTGRES_DB>
+                    </env>
+                    <ports>
+                      <port>5431:5432</port>
+                    </ports>
+                    <wait>
+                      <tcp>
+                        <mode>mapped</mode>
+                        <ports>
+                          <port>5432</port>
+                        </ports>
+                      </tcp>
+                      <time>10000</time>
+                    </wait>
+                  </run>
+                </image>
+              </images>
+            </configuration>
           </plugin>
         </plugins>
       </build>
     </profile>
-
+    <profile>
+      <id>build</id>
+      <properties>
+        <quarkus.container-image.build>true</quarkus.container-image.build>
+      </properties>
+    </profile>
+    <profile>
+      <id>push</id>
+      <properties>
+        <quarkus.container-image.push>true</quarkus.container-image.push>
+      </properties>
+    </profile>
   </profiles>
 </project>
