@@ -59,7 +59,7 @@ public class ApiResource {
             String[] statements = sql.split(";\\r?\\n");
             for (String statement : statements) {
                 if (StringUtils.isNotBlank(statement)) {
-                    client.queryAndAwait(statement);
+                    client.query(statement).execute();
                 }
             }
         } catch (Exception e) {
@@ -78,15 +78,15 @@ public class ApiResource {
     public Uni<Response> getFirst(@PathParam String project, @PathParam String groupId,
                                   @PathParam String artifactId, @PathParam String newVersion) {
         return componentUpgradeService.getFirst(project, groupId, artifactId, newVersion)
-                .onItem().apply(item -> item != null ? Response.ok(item) : Response.status(Status.NOT_FOUND))
-                .onItem().apply(ResponseBuilder::build);
+                .onItem().transform(item -> item != null ? Response.ok(item) : Response.status(Status.NOT_FOUND))
+                .onItem().transform(ResponseBuilder::build);
     }
 
     @POST
     @Path("/component-upgrades/")
     public Uni<Response> create(List<ComponentUpgrade> componentUpgrades) {
         return componentUpgradeService.save(componentUpgrades)
-                .onItem().apply(
+                .onItem().transform(
                         res -> Response.status(Status.CREATED).build())
                 .onFailure().recoverWithItem(
                         e -> Response.status(Status.BAD_REQUEST)

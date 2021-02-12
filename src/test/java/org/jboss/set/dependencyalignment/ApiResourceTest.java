@@ -1,9 +1,9 @@
 package org.jboss.set.dependencyalignment;
 
+import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import org.assertj.core.groups.Tuple;
-import org.hamcrest.Matchers;
 import org.jboss.set.dependencyalignment.domain.ComponentUpgrade;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -12,7 +12,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import javax.ws.rs.core.Response;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
@@ -20,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 
 @QuarkusTest
+@QuarkusTestResource(PostgresResource.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ApiResourceTest {
 

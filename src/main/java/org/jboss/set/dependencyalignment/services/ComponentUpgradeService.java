@@ -23,19 +23,20 @@ public class ComponentUpgradeService {
     PgPool client;
 
     public Multi<ComponentUpgrade> getAll(String project) {
-        return client.preparedQuery("select * from component_upgrades where project = $1", Tuple.of(project))
-                .onItem().produceMulti(rows -> Multi.createFrom().items(() -> StreamSupport.stream(rows.spliterator(), false)))
-                .onItem().apply(ComponentUpgradeService::createComponentUpgrade);
+        return client.preparedQuery("select * from component_upgrades where project = $1")
+                .execute(Tuple.of(project))
+                .onItem().transformToMulti(rows -> Multi.createFrom().items(() -> StreamSupport.stream(rows.spliterator(), false)))
+                .onItem().transform(ComponentUpgradeService::createComponentUpgrade);
 
     }
 
     public Uni<ComponentUpgrade> getFirst(String project, String groupId, String artifactId, String newVersion) {
         return client.preparedQuery("select * from component_upgrades " +
-                        "where project = $1 and group_id = $2 and artifact_id = $3 and new_version = $4 " +
-                        "order by created asc",
-                Tuple.of(project, groupId, artifactId, newVersion))
-                .onItem().apply(RowSet::iterator)
-                .onItem().apply(iterator -> iterator.hasNext() ? createComponentUpgrade(iterator.next()) : null);
+                "where project = $1 and group_id = $2 and artifact_id = $3 and new_version = $4 " +
+                "order by created asc")
+                .execute(Tuple.of(project, groupId, artifactId, newVersion))
+                .onItem().transform(RowSet::iterator)
+                .onItem().transform(iterator -> iterator.hasNext() ? createComponentUpgrade(iterator.next()) : null);
     }
 
     public Uni<Void> save(List<ComponentUpgrade> items) {
@@ -43,28 +44,30 @@ public class ComponentUpgradeService {
                 // validate items
                 .onItem().invoke(ComponentUpgradeService::validateComponentUpgrade)
                 // filter out already existing items
-                .transform().byTestingItemsWith(item -> findExistingRecord(item).onItem().apply(b -> !b))
+                .transform().byTestingItemsWith(item -> findExistingRecord(item).onItem().transform(b -> !b))
                 .transform().byDroppingDuplicates();
         return saveRecords(upgrades);
     }
 
     Uni<Boolean> findExistingRecord(ComponentUpgrade item) {
         return client.preparedQuery("select * from component_upgrades " +
-                        "where project = $1 and group_id = $2 and artifact_id = $3 and old_version = $4 and new_version = $5",
-                Tuple.of(item.project, item.groupId, item.artifactId, item.oldVersion, item.newVersion))
-                .onItem().apply(rs -> rs.rowCount() > 0);
+                "where project = $1 and group_id = $2 and artifact_id = $3 and old_version = $4 and new_version = $5")
+                .execute(Tuple.of(item.project, item.groupId, item.artifactId, item.oldVersion, item.newVersion))
+                .onItem().transform(rs -> rs.rowCount() > 0);
     }
 
     Uni<Void> saveRecords(Multi<ComponentUpgrade> records) {
         return records
                 // convert ComponentUpgrade objects into Tuples
-                .onItem().apply(i -> Tuple.of(i.project, i.groupId, i.artifactId, i.oldVersion, i.newVersion))
+                .onItem().transform(i -> Tuple.of(i.project, i.groupId, i.artifactId, i.oldVersion, i.newVersion))
                 // convert into uni containing the whole list
                 .collectItems().asList()
                 // batch insert
-                .onItem().apply(items -> client.preparedBatch("insert into component_upgrades" +
-                " (project, group_id, artifact_id, old_version, new_version) values ($1, $2, $3, $4, $5)", items))
-                .flatMap(rowSetUni -> rowSetUni.onItem().apply(rs -> null));
+                .onItem().call(items
+                        -> client.preparedQuery("insert into component_upgrades"
+                        + " (project, group_id, artifact_id, old_version, new_version) values ($1, $2, $3, $4, $5)")
+                        .executeBatch(items))
+                .map(rowSetUni -> null);
     }
 
     private static ComponentUpgrade createComponentUpgrade(Row row) {
