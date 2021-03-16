@@ -1,0 +1,92 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: component-upgrades-logger-native-pipeline
+spec:
+  params:
+    - name: gitUrl
+      type: string
+      description: The git repository URL to clone from.
+      default: https://github.com/TomasHofman/component-upgrade-logger
+    - name: gitRevision
+      type: string
+      description: The git branch to clone.
+      default: main
+    - name: contextDir
+      description: the context directory from where to build the application
+      default: .
+    - name: buildImage
+      description: base image to run maven build
+      default: quay.io/quarkus/ubi-quarkus-native-s2i:20.3-java11
+    - name: baseImage
+      description: base runner image
+      default: registry.access.redhat.com/ubi8/ubi-minimal
+    - name: targetImage
+      description: name of the runner image to build
+      default: images.paas.redhat.com/thofman/component-upgrade-logger:native-1.0.0-SNAPSHOT
+    - name: dockerfile
+      description: path to the dockerfile in the source code
+      default: src/main/docker/Dockerfile.native
+  workspaces:
+    - name: shared-workspace
+    - name: maven-settings
+  tasks:
+    - name: fetch-repository
+      taskRef:
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+      params:
+        - name: url
+          value: $(params.gitUrl)
+        - name: revision
+          value: $(params.gitRevision)
+        - name: deleteExisting
+          value: "true"
+    - name: build-image
+      taskRef:
+        name: maven
+      runAfter:
+        - fetch-repository
+      params:
+        - name: MAVEN_IMAGE
+          value: $(params.buildImage)
+        - name: CONTEXT_DIR
+          value: $(params.contextDir)
+        - name: GOALS
+          value:
+            - -DskipTests=true
+            - -Dmaven.javadoc.skip=true
+            - -Dmaven.site.skip=true
+            - -Dmaven.source.skip=true
+            - -Djacoco.skip=true
+            - -Dcheckstyle.skip=true
+            - -Dfindbugs.skip=true
+            - -Dpmd.skip=true
+            - -Dfabric8.skip=true
+            - -Pnative
+            - -e
+            - -B
+            - -Dquarkus.native.native-image-xmx=5g
+            - package
+        - name: MEMORY_LIMIT
+          value: 5Gi
+      workspaces:
+        - name: maven-settings
+          workspace: maven-settings
+        - name: source
+          workspace: shared-workspace
+    - name: push-image
+      taskRef:
+        name: buildah
+      runAfter:
+        - build-image
+      params:
+        - name: IMAGE
+          value: $(params.targetImage)
+        - name: DOCKERFILE
+          value: $(params.dockerfile)
+      workspaces:
+        - name: source
+          workspace: shared-workspace

@@ -1,0 +1,59 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: test-cron-runner
+rules:
+  - apiGroups: ["tekton.dev"]
+    resources: ["pipelines", "pipelineruns", "pipelineresources"]
+    verbs: ["get", "list", "delete", "patch", "create"]
+
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: test-cron-runner
+subjects:
+  - kind: ServiceAccount
+    name: sa-test-cron-runner
+roleRef:
+  kind: Role
+  name: test-cron-runner
+  apiGroup: ""
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa-test-cron-runner
+
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: component-upgrade-logger-pipeline-trigger
+spec:
+  schedule: "0 6 * * 1" # Monday morning
+  successfulJobsHistoryLimit: 4
+  failedJobsHistoryLimit: 4
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: sa-test-cron-runner
+          containers:
+            - name: tkn
+              image: gcr.io/tekton-releases/dogfooding/tkn@sha256:f79c0a56d561b1ae98afca545d0feaf2759f5c486ef891a79f23dc2451167dad
+              # modify the pipeline name bellow if needed
+              # (component-upgrades-logger-native-pipeline or component-upgrades-logger-jvm-pipeline)
+              command: [ "tkn", "pipeline", "start", "component-upgrades-logger-native-pipeline",
+                         "--serviceaccount=build-bot",
+                         "-w", "name=shared-workspace,claimName=build-volume,subPath=component-upgrade-logger",
+                         "-w", "name=maven-settings,emptyDir=", "--use-param-defaults"]
+              resources:
+                limits:
+                  cpu: 100m
+                  memory: 100Mi
+                requests:
+                  cpu: 50m
+                  memory: 20Mi
+          restartPolicy: Never
