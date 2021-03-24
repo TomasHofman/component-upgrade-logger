@@ -1,18 +1,18 @@
 # component-upgrade-logger project
 
 Component Upgrade Logger is a simple REST service for recording and querying dependencies discovered by 
-the Maven Dependency Updator (TODO link).
+the [Maven Dependency Updater](https://github.com/jboss-set/maven-dependency-updater).
 
-## Running tests with Podman
+## Building with Podman
 
-Project uses `testcontainers` to start a containerized database during tests. With Docker installed on the system, this
+Project uses `testcontainers` to start a containerized database during Maven test goal. With Docker installed on the system, this
 should work out of the box. In order to use Podman rather than Docker, do the following:
 
 ```
 export TESTCONTAINERS_RYUK_DISABLED=true
 export DOCKER_HOST="unix:/run/user/$(id -u)/podman/podman.sock"
 # start podman service for one hour
-podman system service -t 3600
+podman system service -t 3600 &
 
 ./mvnw test
 ```
