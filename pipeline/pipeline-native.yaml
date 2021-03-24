@@ -30,6 +30,7 @@ spec:
   workspaces:
     - name: shared-workspace
     - name: maven-settings
+    - name: kubeconfig-workspace
   tasks:
     - name: fetch-repository
       taskRef:
@@ -90,3 +91,16 @@ spec:
       workspaces:
         - name: source
           workspace: shared-workspace
+    - name: rollout
+      taskRef:
+        name: kubernetes-actions
+      runAfter:
+        - push-image
+      params:
+        - name: ARGS
+          value: rollout restart deployment/component-upgrade-logger
+      workspaces:
+        - name: manifest-dir
+          workspace: shared-workspace
+        - name: kubeconfig-dir
+          workspace: kubeconfig-workspace
