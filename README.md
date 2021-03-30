@@ -3,10 +3,46 @@
 Component Upgrade Logger is a simple REST service for recording and querying dependencies discovered by 
 the [Maven Dependency Updater](https://github.com/jboss-set/maven-dependency-updater).
 
-## Building with Podman
+## Development
 
-Project uses `testcontainers` to start a containerized database during Maven test goal. With Docker installed on the system, this
-should work out of the box. In order to use Podman rather than Docker, do the following:
+In order to run the application locally:
+
+* prepare a PostgreSQL database and initialize it with the `src/main/resources/init.sql` script,
+* update database connection parameters in the `src/main/resources/application.properties` file.
+
+An easy way to get a PostgreSQL database running is to create a docker container:
+
+```shell script
+# run a container
+docker run -d --name component-upgrade-logger-postgres \
+  -p 5432:5432 \
+  -e POSTGRES_DB=quarkus_test \
+  -e POSTGRES_USER=quarkus_test \
+  -e POSTGRES_PASSWORD=quarkus_test \
+  postgres:latest
+
+# create tables
+psql -h localhost -U quarkus_test < src/main/resources/init.sql
+```
+
+Next time you need the container again, you can start it with:
+
+```shell script
+docker start component-upgrade-logger-postgres
+```
+
+and stop it with:
+
+```shell script
+docker stop component-upgrade-logger-postgres
+```
+
+### Development with Podman
+
+This project uses the [Testcontainers](https://www.testcontainers.org/) library to start a containerized database
+during the Maven test goal.
+With Docker installed on the system, this should work out of the box. In order to use Podman rather than Docker,
+use the following workaround:
 
 ```
 export TESTCONTAINERS_RYUK_DISABLED=true
