@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: maven
+  name: maven-quarkus
   labels:
     app.kubernetes.io/version: "0.2"
   annotations:
@@ -9,7 +9,10 @@ metadata:
     tekton.dev/tags: build-tool
 spec:
   description: >-
-    This Task can be used to run a Maven build.
+    This is an adaptation of the official "maven" task.
+
+    It uses a different build image containing GraalVM as well as Maven, which allows to build Quarkus native images.
+    Note that memory limit is set to 5Gi, as native image generation is memory intensive.
 
   workspaces:
     - name: source
@@ -19,10 +22,6 @@ spec:
         The workspace consisting of the custom maven settings
         provided by the user.
   params:
-    - name: MAVEN_IMAGE
-      type: string
-      description: Maven base image
-      default: gcr.io/cloud-builders/mvn@sha256:57523fc43394d6d9d2414ee8d1c85ed7a13460cbb268c3cd16d28cfb3859e641 #tag: latest
     - name: GOALS
       description: maven goals to run
       type: array
@@ -139,7 +138,11 @@ spec:
         fi
 
     - name: mvn-goals
-      image: $(params.MAVEN_IMAGE)
+      image: quay.io/quarkus/ubi-quarkus-native-s2i:20.3-java11
+      resources:
+        limits:
+          cpu: '1'
+          memory: '5Gi'
       workingDir: $(workspaces.source.path)/$(params.CONTEXT_DIR)
       command: ["/usr/bin/mvn"]
       args:

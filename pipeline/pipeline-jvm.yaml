@@ -15,9 +15,6 @@ spec:
     - name: contextDir
       description: the context directory from where to build the application
       default: .
-    - name: buildImage
-      description: base image to run maven build
-      default: quay.io/quarkus/ubi-quarkus-native-s2i:20.3-java11
     - name: baseImage
       description: base runner image
       default: registry.access.redhat.com/ubi8/ubi-minimal
@@ -31,7 +28,7 @@ spec:
     - name: shared-workspace
     - name: maven-settings
     - name: kubeconfig-workspace
-tasks:
+  tasks:
     - name: fetch-repository
       taskRef:
         name: git-clone
@@ -51,8 +48,6 @@ tasks:
       runAfter:
         - fetch-repository
       params:
-        - name: MAVEN_IMAGE
-          value: $(params.buildImage)
         - name: CONTEXT_DIR
           value: $(params.contextDir)
         - name: GOALS
@@ -93,8 +88,11 @@ tasks:
       runAfter:
         - push-image
       params:
-        - name: ARGS
-          value: rollout restart deployment/component-upgrade-logger
+        - name: args
+          value:
+            - rollout
+            - restart
+            - deployment/component-upgrade-logger
       workspaces:
         - name: manifest-dir
           workspace: shared-workspace
