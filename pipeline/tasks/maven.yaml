@@ -73,6 +73,13 @@ spec:
   steps:
     - name: mvn-settings
       image: registry.access.redhat.com/ubi8/ubi-minimal:8.2
+      resources:
+        requests:
+          cpu: '100m'
+          memory: '50Mi'
+        limits:
+          cpu: '100m'
+          memory: '100Mi'
       script: |
         #!/usr/bin/env bash
 
@@ -140,6 +147,13 @@ spec:
 
     - name: mvn-goals
       image: $(params.MAVEN_IMAGE)
+      resources:
+        requests:
+          cpu: '500m'
+          memory: '1Gi'
+        limits:
+          cpu: '500m'
+          memory: '2Gi'
       workingDir: $(workspaces.source.path)/$(params.CONTEXT_DIR)
       command: ["/usr/bin/mvn"]
       args:

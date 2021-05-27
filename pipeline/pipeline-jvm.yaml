@@ -42,7 +42,7 @@ spec:
           value: $(params.gitRevision)
         - name: deleteExisting
           value: "true"
-    - name: build-image
+    - name: build-app
       taskRef:
         name: maven
       runAfter:
@@ -69,11 +69,11 @@ spec:
           workspace: maven-settings
         - name: source
           workspace: shared-workspace
-    - name: push-image
+    - name: build-image
       taskRef:
         name: buildah
       runAfter:
-        - build-image
+        - build-app
       params:
         - name: IMAGE
           value: $(params.targetImage)
@@ -86,13 +86,13 @@ spec:
       taskRef:
         name: kubernetes-actions
       runAfter:
-        - push-image
+        - build-image
       params:
         - name: args
           value:
             - rollout
             - restart
-            - deployment/component-upgrade-logger
+            - deployment/component-upgrade-logger-jvm
       workspaces:
         - name: manifest-dir
           workspace: shared-workspace
