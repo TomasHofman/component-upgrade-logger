@@ -26,7 +26,10 @@ spec:
               protocol: TCP
           env:
             - name: QUARKUS_DATASOURCE_REACTIVE_URL
-              value: 'postgresql://thunder.sin2.redhat.com:5433/component-upgrades'
+              valueFrom:
+                secretKeyRef:
+                  name: component-upgrades-db-connection
+                  key: url
             - name: QUARKUS_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
