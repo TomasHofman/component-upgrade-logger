@@ -4,9 +4,9 @@ metadata:
   name: component-upgrade-logger-jvm
   labels:
     app: component-upgrade-logger
-  annotations: {}
+    paas.redhat.com/appcode: SET-001
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       deployment: component-upgrade-logger-jvm
@@ -14,18 +14,17 @@ spec:
     metadata:
       labels:
         deployment: component-upgrade-logger-jvm
+        paas.redhat.com/appcode: SET-001
     spec:
       containers:
         - name: component-upgrade-logger
-          image: images.paas.redhat.com/thofman/component-upgrade-logger:jvm-1.0.0-SNAPSHOT
+          image: images.paas.redhat.com/thofman/component-upgrade-logger:jvm-latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
               protocol: TCP
-            - containerPort: 8443
-              protocol: TCP
           env:
-            - name: QUARKUS_DATASOURCE_REACTIVE_URL
+            - name: QUARKUS_DATASOURCE_JDBC_URL
               valueFrom:
                 secretKeyRef:
                   name: component-upgrades-db-connection
@@ -43,10 +42,10 @@ spec:
           resources:
             limits:
               cpu: 100m
-              memory: 150Mi
+              memory: 800Mi
             requests:
               cpu: 50m
-              memory: 100Mi
+              memory: 400Mi
           livenessProbe:
             httpGet:
               path: /q/health/live

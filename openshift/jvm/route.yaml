@@ -4,6 +4,7 @@ metadata:
   name: component-upgrade-logger-jvm
   labels:
     app: component-upgrade-logger-jvm
+    paas.redhat.com/appcode: SET-001
 spec:
   to:
     kind: Service

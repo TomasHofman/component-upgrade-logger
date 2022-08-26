@@ -1,8 +1,10 @@
 ---
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: component-upgrade-logger-pipeline-trigger
+  labels:
+    paas.redhat.com/appcode: SET-001
 spec:
   schedule: "0 6 * * 1" # Monday morning
   successfulJobsHistoryLimit: 2

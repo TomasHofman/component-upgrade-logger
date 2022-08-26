@@ -4,7 +4,7 @@ metadata:
   name: component-upgrade-logger
   labels:
     app: component-upgrade-logger
-  annotations: {}
+    paas.redhat.com/appcode: SET-001
 spec:
   replicas: 1
   selector:
@@ -14,18 +14,17 @@ spec:
     metadata:
       labels:
         deployment: component-upgrade-logger
+        paas.redhat.com/appcode: SET-001
     spec:
       containers:
         - name: component-upgrade-logger
-          image: images.paas.redhat.com/thofman/component-upgrade-logger:native-1.0.0-SNAPSHOT
+          image: images.paas.redhat.com/thofman/component-upgrade-logger:native-latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
               protocol: TCP
-            - containerPort: 8443
-              protocol: TCP
           env:
-            - name: QUARKUS_DATASOURCE_REACTIVE_URL
+            - name: QUARKUS_DATASOURCE_JDBC_URL
               valueFrom:
                 secretKeyRef:
                   name: component-upgrades-db-connection
@@ -70,5 +69,5 @@ spec:
     rollingUpdate:
       maxUnavailable: 25%
       maxSurge: 25%
-  revisionHistoryLimit: 10
-  progressDeadlineSeconds: 600
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 300

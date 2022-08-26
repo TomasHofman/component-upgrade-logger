@@ -2,6 +2,8 @@ apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: component-upgrades-logger-native-pipeline
+  labels:
+    paas.redhat.com/appcode: SET-001
 spec:
   params:
     - name: gitUrl
