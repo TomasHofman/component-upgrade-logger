@@ -3,6 +3,7 @@ package org.jboss.set.dependencyalignment.domain;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 public class ComponentUpgrade {
@@ -18,13 +19,15 @@ public class ComponentUpgrade {
     public ComponentUpgrade() {
     }
 
-    public ComponentUpgrade(String project, String groupId, String artifactId, String oldVersion, String newVersion, LocalDateTime created) {
+    public ComponentUpgrade(String project, String groupId, String artifactId, String oldVersion, String newVersion, Timestamp created) {
         this.project = project;
         this.groupId = groupId;
         this.artifactId = artifactId;
         this.oldVersion = oldVersion;
         this.newVersion = newVersion;
-        this.created = created;
+        if (created != null) {
+            this.created = created.toLocalDateTime();
+        }
     }
 
     @Override
