@@ -13,17 +13,14 @@ spec:
       description: The git branch to clone.
       default: main
     - name: contextDir
-      description: the context directory from where to build the application
+      description: The context directory from where to build the application
       default: .
     - name: baseImage
-      description: base runner image
+      description: Base runner image
       default: registry.access.redhat.com/ubi8/ubi-minimal
-    - name: targetImage
-      description: name of the runner image to build
-      default: images.paas.redhat.com/thofman/component-upgrade-logger:jvm-1.0.0-SNAPSHOT
-    - name: dockerfile
-      description: path to the dockerfile in the source code
-      default: src/main/docker/Dockerfile.jvm
+    - name: registrySecretName
+      description: Name of the secret with container registry credentials to push the image.
+      default: images-paas-redhat-com-thofman
   workspaces:
     - name: shared-workspace
     - name: maven-settings
@@ -42,14 +39,16 @@ spec:
           value: $(params.gitRevision)
         - name: deleteExisting
           value: "true"
-    - name: build-app
+    - name: build-push-image
       taskRef:
-        name: maven
+        name: maven-quarkus
       runAfter:
         - fetch-repository
       params:
         - name: CONTEXT_DIR
           value: $(params.contextDir)
+        - name: REGISTRY_SECRET_NAME
+          value: $(params.registrySecretName)
         - name: GOALS
           value:
             - -DskipTests=true
@@ -63,30 +62,19 @@ spec:
             - -Dfabric8.skip=true
             - -e
             - -B
+            - -Dquarkus.container-image.build=true
+            - -Dquarkus.container-image.push=true
             - package
       workspaces:
         - name: maven-settings
           workspace: maven-settings
         - name: source
           workspace: shared-workspace
-    - name: build-image
-      taskRef:
-        name: buildah
-      runAfter:
-        - build-app
-      params:
-        - name: IMAGE
-          value: $(params.targetImage)
-        - name: DOCKERFILE
-          value: $(params.dockerfile)
-      workspaces:
-        - name: source
-          workspace: shared-workspace
     - name: rollout
       taskRef:
         name: kubernetes-actions
       runAfter:
-        - build-image
+        - build-push-image
       params:
         - name: args
           value:

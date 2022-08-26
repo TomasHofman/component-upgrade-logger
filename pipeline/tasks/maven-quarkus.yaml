@@ -69,9 +69,16 @@ spec:
         The context directory within the repository for sources on
         which we want to execute maven goals.
       default: "."
+    - name: REGISTRY_SECRET_NAME
+      type: string
+      description: >-
+        Name of the secret that contains registry authentication credentials with "username" and "password" keys.
   steps:
     - name: mvn-settings
-      image: registry.access.redhat.com/ubi8/ubi-minimal:8.2
+      image: registry.access.redhat.com/ubi8/ubi-minimal:latest
+#      env:
+#        - name: HOME
+#          value: $(workspaces.maven-settings.path)
       resources:
         requests:
           cpu: '100m'
@@ -145,13 +152,26 @@ spec:
         fi
 
     - name: mvn-goals
-      image: quay.io/quarkus/ubi-quarkus-native-s2i:20.3-java11
+      image: quay.io/quarkus/ubi-quarkus-native-s2i:21.3.2-java11
+      env:
+        - name: QUARKUS_CONTAINER_IMAGE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: $(params.REGISTRY_SECRET_NAME)
+              key: username
+        - name: QUARKUS_CONTAINER_IMAGE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: $(params.REGISTRY_SECRET_NAME)
+              key: password
+        - name: HOME
+          value: $(workspaces.source.path)
       resources:
         requests:
           cpu: '500m'
-          memory: '2Gi'
+          memory: '1Gi'
         limits:
-          cpu: '500m'
+          cpu: '1'
           memory: '5Gi'
       workingDir: $(workspaces.source.path)/$(params.CONTEXT_DIR)
       command: ["/usr/bin/mvn"]
