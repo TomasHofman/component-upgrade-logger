@@ -20,12 +20,6 @@ spec:
     - name: baseImage
       description: Base runner image
       default: registry.access.redhat.com/ubi8/ubi-minimal
-#    - name: targetImage
-#      description: Name of the runner image to build
-#      default: images.paas.redhat.com/thofman/component-upgrade-logger:native-1.0.0-SNAPSHOT
-#    - name: dockerfile
-#      description: Path to the dockerfile in the source code
-#      default: src/main/docker/Dockerfile.native
     - name: registrySecretName
       description: Name of the secret with container registry credentials to push the image.
       default: images-paas-redhat-com-thofman
@@ -37,6 +31,7 @@ spec:
     - name: fetch-repository
       taskRef:
         name: git-clone
+        kind: Task
       workspaces:
         - name: output
           workspace: shared-workspace
@@ -80,19 +75,6 @@ spec:
           workspace: maven-settings
         - name: source
           workspace: shared-workspace
-#    - name: build-image
-#      taskRef:
-#        name: my-buildah
-#      runAfter:
-#        - build-app
-#      params:
-#        - name: IMAGE
-#          value: $(params.targetImage)
-#        - name: DOCKERFILE
-#          value: $(params.dockerfile)
-#      workspaces:
-#        - name: source
-#          workspace: shared-workspace
     - name: rollout
       taskRef:
         name: kubernetes-actions

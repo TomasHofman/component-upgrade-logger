@@ -7,8 +7,9 @@ metadata:
     paas.redhat.com/appcode: SET-001
 spec:
   schedule: "0 6 * * 1" # Monday morning
-  successfulJobsHistoryLimit: 2
-  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 5
+  failedJobsHistoryLimit: 10
+  backoffLimit: 3
   jobTemplate:
     spec:
       template:
@@ -16,7 +17,7 @@ spec:
           serviceAccountName: sa-cron-runner
           containers:
             - name: tkn
-              image: gcr.io/tekton-releases/dogfooding/tkn@sha256:f79c0a56d561b1ae98afca545d0feaf2759f5c486ef891a79f23dc2451167dad
+              image: gcr.io/tekton-releases/dogfooding/tkn
               # modify the pipeline name bellow if needed
               # (component-upgrades-logger-native-pipeline or component-upgrades-logger-jvm-pipeline)
               command: [ "tkn", "pipeline", "start", "component-upgrades-logger-native-pipeline",

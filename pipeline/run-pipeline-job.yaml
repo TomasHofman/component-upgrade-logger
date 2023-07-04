@@ -1,0 +1,41 @@
+#
+# Use this job to start the pipeline manually.
+#
+kind: Job
+apiVersion: batch/v1
+metadata:
+  generateName: component-upgrade-logger-pipeline-manual-trigger-
+  namespace: jboss-set-psi
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      serviceAccountName: sa-cron-runner
+      containers:
+        - name: tkn
+          image: >-
+            gcr.io/tekton-releases/dogfooding/tkn
+          command:
+            - tkn
+            - pipeline
+            - start
+            - component-upgrades-logger-native-pipeline
+            - '-n'
+            - jboss-set-psi
+            - '--serviceaccount=build-bot'
+            - '-w'
+            - 'name=shared-workspace,claimName=build-volume,subPath=component-upgrade-logger'
+            - '-w'
+            - 'name=maven-settings,emptyDir='
+            - '-w'
+            - 'name=kubeconfig-workspace,emptyDir='
+            - '--use-param-defaults'
+          resources:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+            requests:
+              cpu: 50m
+              memory: 20Mi
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Never
