@@ -3,7 +3,7 @@ kind: Pipeline
 metadata:
   name: component-upgrades-logger-native-pipeline
   labels:
-    paas.redhat.com/appcode: SET-001
+    paas.redhat.com/appcode: SET-002
 spec:
   params:
     - name: gitUrl

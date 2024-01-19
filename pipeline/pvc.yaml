@@ -3,7 +3,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: build-volume
   labels:
-    paas.redhat.com/appcode: SET-001
+    paas.redhat.com/appcode: SET-002
 spec:
   accessModes:
   - ReadWriteMany

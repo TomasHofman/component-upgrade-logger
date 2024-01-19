@@ -4,6 +4,7 @@ metadata:
   name: git-clone
   labels:
     app.kubernetes.io/version: "0.3"
+    paas.redhat.com/appcode: SET-002
   annotations:
     tekton.dev/pipelines.minVersion: "0.21.0"
     tekton.dev/tags: git

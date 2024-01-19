@@ -5,6 +5,7 @@ metadata:
   name: openshift-client
   labels:
     app.kubernetes.io/version: "0.1"
+    paas.redhat.com/appcode: SET-002
   annotations:
     tekton.dev/pipelines.minVersion: "0.12.1"
     tekton.dev/tags: cli

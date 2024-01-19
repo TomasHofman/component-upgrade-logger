@@ -6,6 +6,8 @@ apiVersion: batch/v1
 metadata:
   generateName: component-upgrade-logger-pipeline-manual-trigger-
   namespace: jboss-set-psi
+  labels:
+    paas.redhat.com/appcode: SET-002
 spec:
   backoffLimit: 3
   template:
